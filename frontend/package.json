@@ -2,6 +2,7 @@
   "name": "whatsapp-ai-bot-frontend",
   "version": "1.0.0",
   "description": "Frontend for WhatsApp AI Bot",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "vite",
