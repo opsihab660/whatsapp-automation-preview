@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import { useWebSocket } from './hooks/useWebSocket';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { WhatsAppProvider } from './contexts/WhatsAppContext';
+import { getApiUrl } from './utils/config';
 
 function App() {
   const [isConnected, setIsConnected] = useState(false);
@@ -18,7 +19,7 @@ function App() {
     // Check initial connection status
     const checkConnectionStatus = async () => {
       try {
-        const response = await fetch('/api/whatsapp/status');
+        const response = await fetch(`${getApiUrl()}/whatsapp/status`);
         const data = await response.json();
 
         if (data.success) {

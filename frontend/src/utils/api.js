@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -33,7 +33,7 @@ api.interceptors.response.use(
     // Handle common errors
     if (error.response) {
       const { status, data } = error.response;
-      
+
       switch (status) {
         case 401:
           // Unauthorized - clear token and redirect to login
@@ -55,7 +55,7 @@ api.interceptors.response.use(
         default:
           console.error('API Error:', data?.message || error.message);
       }
-      
+
       return Promise.reject(data || error);
     } else if (error.request) {
       // Network error

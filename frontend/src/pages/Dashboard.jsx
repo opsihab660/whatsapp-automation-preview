@@ -24,7 +24,8 @@ const Dashboard = () => {
     toggleAutoReply,
     disconnect,
     fetchMessages,
-    isLoading
+    isLoading,
+    requestStatusUpdate
   } = useWhatsApp();
 
   const [activeTab, setActiveTab] = useState('messages');
@@ -247,9 +248,18 @@ const Dashboard = () => {
 
             {/* Connection Info */}
             <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Connection Info
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Connection Info
+                </h3>
+                <button
+                  onClick={requestStatusUpdate}
+                  className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Refresh connection status"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
 
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">

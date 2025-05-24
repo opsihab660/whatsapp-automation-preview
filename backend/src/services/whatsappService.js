@@ -117,7 +117,14 @@ class WhatsAppService {
 
           // Emit QR code to frontend
           if (this.io) {
-            this.io.emit('qr-code', { qrCode: this.qrCode });
+            const qrData = { qrCode: this.qrCode };
+            this.io.emit('qr-code', qrData);
+            this.io.emit('connection-status', {
+              status: 'qr_generated',
+              qrCode: this.qrCode,
+              user: null
+            });
+            logger.info('Emitted QR code and status to all clients');
           }
         } catch (error) {
           logger.error('Error generating QR code:', error);
@@ -141,10 +148,14 @@ class WhatsAppService {
 
         // Emit disconnection to frontend
         if (this.io) {
-          this.io.emit('connection-status', {
+          const statusData = {
             status: 'disconnected',
-            reason: lastDisconnect?.error?.message
-          });
+            reason: lastDisconnect?.error?.message,
+            user: null,
+            qrCode: null
+          };
+          this.io.emit('connection-status', statusData);
+          logger.info('Emitted disconnection status to all clients:', statusData);
         }
 
         if (shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -178,10 +189,13 @@ class WhatsAppService {
 
         // Emit connection success to frontend
         if (this.io) {
-          this.io.emit('connection-status', {
+          const statusData = {
             status: 'connected',
-            user: this.sock.user
-          });
+            user: this.sock.user,
+            qrCode: null
+          };
+          this.io.emit('connection-status', statusData);
+          logger.info('Emitted connection status to all clients:', statusData);
         }
       }
     });

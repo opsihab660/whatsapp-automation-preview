@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { getApiUrl } from '../utils/config';
 
 const WhatsAppContext = createContext();
 
@@ -26,10 +27,12 @@ export const WhatsAppProvider = ({ children, socket }) => {
 
     // Socket event listeners
     socket.on('connection-status', (data) => {
+      console.log('Received connection status:', data);
       setConnectionStatus(prev => ({
         ...prev,
         status: data.status,
-        user: data.user || null
+        user: data.user || null,
+        qrCode: data.qrCode || prev.qrCode
       }));
 
       if (data.status === 'connected') {
@@ -130,11 +133,48 @@ export const WhatsAppProvider = ({ children, socket }) => {
     };
   }, [socket]);
 
+  // Periodic status check as fallback
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const response = await fetch('/api/whatsapp/status');
+        const data = await response.json();
+
+        if (data.success) {
+          const status = data.data;
+          setConnectionStatus(prev => ({
+            ...prev,
+            status: status.isConnected ? 'connected' : 'disconnected',
+            user: status.user || prev.user,
+            qrCode: status.qrCode || prev.qrCode
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to check status:', error);
+      }
+    };
+
+    // Check status immediately
+    checkStatus();
+
+    // Set up periodic check every 30 seconds
+    const interval = setInterval(checkStatus, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Function to manually request status update
+  const requestStatusUpdate = () => {
+    if (socket && socket.connected) {
+      socket.emit('request-status');
+    }
+  };
+
   // API functions
   const sendMessage = async (to, message) => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/whatsapp/send-message', {
+      const response = await fetch(`${getApiUrl()}/whatsapp/send-message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +200,7 @@ export const WhatsAppProvider = ({ children, socket }) => {
 
   const toggleAutoReply = async (enabled) => {
     try {
-      const response = await fetch('/api/whatsapp/toggle-auto-reply', {
+      const response = await fetch(`${getApiUrl()}/whatsapp/toggle-auto-reply`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +225,7 @@ export const WhatsAppProvider = ({ children, socket }) => {
   const disconnect = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/whatsapp/disconnect', {
+      const response = await fetch(`${getApiUrl()}/whatsapp/disconnect`, {
         method: 'POST',
       });
 
@@ -211,7 +251,7 @@ export const WhatsAppProvider = ({ children, socket }) => {
 
   const fetchMessages = async (limit = 50, offset = 0) => {
     try {
-      const response = await fetch(`/api/messages?limit=${limit}&offset=${offset}`);
+      const response = await fetch(`${getApiUrl()}/messages?limit=${limit}&offset=${offset}`);
       const data = await response.json();
 
       if (data.success) {
@@ -231,7 +271,7 @@ export const WhatsAppProvider = ({ children, socket }) => {
   const testAI = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/ai/test', {
+      const response = await fetch(`${getApiUrl()}/ai/test`, {
         method: 'POST',
       });
 
@@ -261,7 +301,8 @@ export const WhatsAppProvider = ({ children, socket }) => {
     disconnect,
     fetchMessages,
     testAI,
-    setMessages
+    setMessages,
+    requestStatusUpdate
   };
 
   return (

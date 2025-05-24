@@ -10,7 +10,9 @@
     "backend:start": "cd backend && npm start",
     "frontend:build": "cd frontend && npm run build",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "start": "npm run backend:start"
+    "start": "npm run backend:start",
+    "deploy:help": "node -e \"console.log('Run ./deploy.sh (Linux/Mac) or deploy.bat (Windows) for deployment help')\"",
+    "build:all": "npm run frontend:build"
   },
   "keywords": [
     "whatsapp",

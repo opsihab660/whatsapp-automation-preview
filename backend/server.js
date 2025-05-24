@@ -43,11 +43,46 @@ app.use(express.urlencoded({ extended: true }));
 database.init();
 
 // Socket.IO connection handling
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   logger.info(`Client connected: ${socket.id}`);
+
+  // Send current connection status to newly connected client
+  try {
+    const currentStatus = await whatsappService.getConnectionStatus();
+    socket.emit('connection-status', {
+      status: currentStatus.isConnected ? 'connected' : 'disconnected',
+      user: currentStatus.user,
+      qrCode: currentStatus.qrCode
+    });
+
+    // Send current auto-reply status
+    const autoReplyStatus = await whatsappService.getAutoReplyStatus();
+    socket.emit('auto-reply-status', { enabled: autoReplyStatus });
+
+    logger.info(`Sent initial status to client ${socket.id}:`, {
+      connected: currentStatus.isConnected,
+      autoReply: autoReplyStatus
+    });
+  } catch (error) {
+    logger.error('Error sending initial status to client:', error);
+  }
 
   socket.on('disconnect', () => {
     logger.info(`Client disconnected: ${socket.id}`);
+  });
+
+  // Handle client requesting current status
+  socket.on('request-status', async () => {
+    try {
+      const currentStatus = await whatsappService.getConnectionStatus();
+      socket.emit('connection-status', {
+        status: currentStatus.isConnected ? 'connected' : 'disconnected',
+        user: currentStatus.user,
+        qrCode: currentStatus.qrCode
+      });
+    } catch (error) {
+      logger.error('Error handling status request:', error);
+    }
   });
 });
 
@@ -80,7 +115,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3001;
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

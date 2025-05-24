@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: whatsapp-automation-backend
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: MISTRAL_MODEL
+        value: mistral-large-latest
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: DB_PATH
+        value: ./data/messages.db
+      - key: WHATSAPP_SESSION_PATH
+        value: ./sessions
+      - key: WHATSAPP_AUTO_REPLY
+        value: true
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_FILE
+        value: ./logs/app.log
+      - key: FRONTEND_URL
+        sync: false
+    disk:
+      name: whatsapp-data
+      mountPath: /opt/render/project/src/backend/data
+      sizeGB: 1
